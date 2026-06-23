@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contracts.ai - Enterprise Contract Intelligence</title>
+    
+    <!-- Fonts: Inter & IBM Plex Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['"IBM Plex Sans"', 'serif'],
+                    },
+                    colors: {
+                        primary: '#0f172a',    // slate-900
+                        secondary: '#1e293b',  // slate-800
+                        accent: '#2563eb',     // blue-600
+                        background: '#f8fafc', // slate-50
+                        surface: '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Icons: Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <!-- Markdown & Sanitization -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+
+    <!-- Mind Map (Vis-Network) -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <!-- Excel Export (SheetJS) -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <!-- PowerPoint Export (PptxGenJS) -->
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.min.js"></script>
+
+    <style>
+        /* arXiv inspired minimalistic typography & scrollbars */
+        body { background-color: #f8fafc; color: #0f172a; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .prose pre { background-color: #1e293b !important; color: #e2e8f0; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; }
+        .prose code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.875em; }
+        .prose p, .prose ul, .prose ol { margin-bottom: 0.75em; line-height: 1.6; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; }
+        .prose ol { list-style-type: decimal; padding-left: 1.5rem; }
+        .prose h1, .prose h2, .prose h3 { font-family: 'IBM Plex Sans', serif; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; color: #0f172a; }
+        .prose strong { font-weight: 600; }
+        
+        .citation {
+            display: inline-block; padding: 0.1rem 0.4rem; font-size: 0.75rem; font-weight: 500;
+            background-color: #e0e7ff; color: #3730a3; border-radius: 9999px; cursor: pointer;
+            margin: 0 0.2rem; transition: background-color 0.2s;
+        }
+        .citation:hover { background-color: #c7d2fe; }
+
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%;
+            width: 20px; height: 20px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* RTL Adjustments */
+        [dir="rtl"] .ml-auto { margin-right: auto; margin-left: 0; }
+        [dir="rtl"] .mr-2 { margin-left: 0.5rem; margin-right: 0; }
+        [dir="rtl"] .pl-10 { padding-right: 2.5rem; padding-left: 0; }
+        [dir="rtl"] .left-3 { right: 0.75rem; left: auto; }
+        [dir="rtl"] .border-r { border-left-width: 1px; border-right-width: 0; }
+        [dir="rtl"] .border-l { border-right-width: 1px; border-left-width: 0; }
+    </style>
+</head>
+<body class="h-screen flex flex-col font-sans overflow-hidden antialiased">
+
+    <!-- Top Navigation -->
+    <header class="bg-primary text-white h-14 flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-accent text-white p-1.5 rounded-md">
+                <i data-lucide="scale" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="font-serif font-semibold text-lg tracking-wide leading-tight">Contracts.ai</h1>
+                <p class="text-[0.65rem] text-slate-400 uppercase tracking-wider hidden sm:block">AI-Powered Contract Intelligence for SAM</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="lang-toggle" class="text-sm font-medium hover:text-accent transition-colors" onclick="toggleLanguage()">العربية</button>
+            <div class="h-4 w-px bg-slate-600"></div>
+            <button id="api-status-btn" class="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border border-slate-700 hover:bg-slate-800 transition-colors" onclick="openApiModal()">
+                <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                <span id="status-text">Disconnected</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Left Panel: Document Library (20%) -->
+        <aside class="w-1/5 min-w-[250px] bg-surface border-r border-slate-200 flex flex-col z-0">
+            <div class="p-4 border-b border-slate-100 bg-slate-50">
+                <h2 class="font-serif font-medium text-slate-800 flex items-center gap-2" id="ui-doc-library">
+                    <i data-lucide="library" class="w-4 h-4 text-slate-500"></i> Document Library
+                </h2>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="p-4 border-b border-slate-100">
+                <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:bg-slate-50 transition-colors group" onclick="document.getElementById('file-upload').click()">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2 group-hover:text-accent transition-colors"></i>
+                    <p class="text-sm font-medium text-slate-600" id="ui-upload-text">Upload Contracts</p>
+                    <p class="text-xs text-slate-400 mt-1">PDF format. Drag & drop.</p>
+                    <input type="file" id="file-upload" class="hidden" multiple accept="application/pdf" onchange="handleFiles(this.files)">
+                </div>
+                <div id="upload-progress" class="hidden mt-3 text-xs text-slate-500 flex items-center justify-between">
+                    <span id="upload-status">Processing...</span>
+                    <div class="loader w-3 h-3 border-2 border-t-accent"></div>
+                </div>
+            </div>
+
+            <!-- Document List -->
+            <div class="flex-1 overflow-y-auto p-2" id="document-list">
+                <!-- Populated via JS -->
+                <div class="text-center p-6 text-sm text-slate-400 italic mt-10" id="empty-state">
+                    No documents uploaded yet.
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel: Document Viewer (50%) -->
+        <section class="flex-1 bg-slate-200/50 flex flex-col relative">
+            <!-- Viewer Toolbar -->
+            <div class="h-12 bg-surface border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <button class="p-1.5 text-slate-600 hover:bg-slate-100 rounded" onclick="toggleSidebarLeft()" title="Toggle Library">
+                        <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+                    </button>
+                    <div class="h-4 w-px bg-slate-300 mx-1"></div>
+                    <span id="current-doc-title" class="text-sm font-medium text-slate-800 truncate max-w-[200px]">No document selected</span>
+                </div>
+                
+                <div class="flex items-center gap-1 bg-slate-100 rounded-md p-1 border border-slate-200">
+                    <button class="p-1 text-slate-600 hover:bg-white rounded hover:shadow-sm disabled:opacity-50" id="btn-prev" onclick="changePage(-1)" disabled>
+                        <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                    </button>
+                    <span class="text-xs font-medium px-2 text-slate-600">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
+                    <button class="p-1 text-slate-600 hover:bg-white rounded hover:shadow-sm disabled:opacity-50" id="btn-next" onclick="changePage(1)" disabled>
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="p-1.5 text-slate-600 hover:bg-slate-100 rounded" onclick="zoom(-0.2)" title="Zoom Out"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                    <span id="zoom-val" class="text-xs font-medium text-slate-600 w-8 text-center">100%</span>
+                    <button class="p-1.5 text-slate-600 hover:bg-slate-100 rounded" onclick="zoom(0.2)" title="Zoom In"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+
+            <!-- PDF Canvas Container -->
+            <div class="flex-1 overflow-auto relative p-4 bg-slate-200/50" id="pdf-container">
+                <div id="pdf-wrapper" class="relative w-full flex flex-col items-center hidden">
+                    <!-- Pages will be injected here -->
+                </div>
+                <!-- Empty State -->
+                <div id="pdf-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none">
+                    <i data-lucide="file-search" class="w-16 h-16 mb-4 opacity-20"></i>
+                    <p class="font-serif">Select a document to view</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: AI Assistant & Tools (30%) -->
+        <aside class="w-[30%] min-w-[350px] bg-surface border-l border-slate-200 flex flex-col z-0">
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 shrink-0">
+                <button class="flex-1 py-3 text-sm font-medium border-b-2 border-accent text-accent transition-colors" id="tab-chat" onclick="switchTab('chat')">
+                    <i data-lucide="sparkles" class="w-4 h-4 inline mr-1 align-text-bottom"></i> AI Assistant
+                </button>
+                <button class="flex-1 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors" id="tab-tools" onclick="switchTab('tools')">
+                    <i data-lucide="briefcase" class="w-4 h-4 inline mr-1 align-text-bottom"></i> SAM Intelligence
+                </button>
+            </div>
+
+            <!-- Tab Content: AI Chat -->
+            <div id="view-chat" class="flex-1 flex flex-col overflow-hidden">
+                <!-- Chat History -->
+                <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
+                    <!-- Welcome Message -->
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4 text-accent"></i>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-700 shadow-sm">
+                            <p class="font-serif font-medium mb-1" id="ui-greeting">Hello, I am Contracts.ai.</p>
+                            <p id="ui-welcome-msg">Upload your Software Asset Management agreements, SaaS contracts, or vendor documents. I can analyze them, identify risks, extract metadata, and answer any questions.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Input Area -->
+                <div class="p-3 bg-white border-t border-slate-200">
+                    <div class="relative flex items-end gap-2 bg-slate-50 border border-slate-300 rounded-xl p-2 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all">
+                        <textarea id="chat-input" rows="1" class="w-full bg-transparent outline-none resize-none text-sm p-2 max-h-32 text-slate-800 placeholder-slate-400" placeholder="Ask about terms, renewals, compliance..."></textarea>
+                        <button id="send-btn" class="p-2 bg-accent text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 shrink-0" onclick="sendMessage()">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-center text-slate-400 mt-2">
+                        Powered by Gemini 2.5 Flash • Agentic Document Reasoning
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: SAM Tools -->
+            <div id="view-tools" class="flex-1 overflow-y-auto p-4 hidden bg-background">
+                
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Generation Tools</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="generateMindMap()" class="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-lg hover:border-accent hover:shadow-sm transition-all group">
+                            <i data-lucide="network" class="w-5 h-5 text-slate-500 mb-1 group-hover:text-accent"></i>
+                            <span class="text-xs font-medium text-slate-700">Knowledge Graph</span>
+                        </button>
+                        <button onclick="generatePresentation()" class="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-lg hover:border-amber-500 hover:shadow-sm transition-all group">
+                            <i data-lucide="presentation" class="w-5 h-5 text-slate-500 mb-1 group-hover:text-amber-500"></i>
+                            <span class="text-xs font-medium text-slate-700">Exec. Presentation</span>
+                        </button>
+                        <button onclick="exportToExcel()" class="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:shadow-sm transition-all group">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-slate-500 mb-1 group-hover:text-emerald-500"></i>
+                            <span class="text-xs font-medium text-slate-700">Export Metadata</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Analysis (SAM)</h3>
+                    <div class="space-y-2">
+                        <button class="w-full text-left p-3 text-sm bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between group" onclick="triggerQuickAction('Extract License Entitlements, Quantities, and User Limits from all uploaded contracts. Format as a table.')">
+                            <span class="font-medium text-slate-700">License Entitlements</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-accent"></i>
+                        </button>
+                        <button class="w-full text-left p-3 text-sm bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between group" onclick="triggerQuickAction('Identify all True-Up clauses, Audit Rights, and Compliance reporting requirements across documents.')">
+                            <span class="font-medium text-slate-700">Audit & True-Up Risks</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-accent"></i>
+                        </button>
+                        <button class="w-full text-left p-3 text-sm bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between group" onclick="triggerQuickAction('List all Renewal Dates, Termination Notice periods, and auto-renewal clauses. Summarize timeline.')">
+                            <span class="font-medium text-slate-700">Renewal Timeline</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-accent"></i>
+                        </button>
+                        <button class="w-full text-left p-3 text-sm bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between group" onclick="triggerQuickAction('Perform a comprehensive Executive Summary of the selected contract covering Vendor, Value, Key Terms, and Risks.')">
+                            <span class="font-medium text-slate-700">Executive Summary</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-accent"></i>
+                        </button>
+                        <button class="w-full text-left p-3 text-sm bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between group" onclick="triggerQuickAction('Compare pricing terms, price caps, and fee increases across the uploaded vendor agreements.')">
+                            <span class="font-medium text-slate-700">Pricing Comparison</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-accent"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modals -->
+
+    <!-- API Key Modal -->
+    <div id="modal-api" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-blue-100 text-accent rounded-lg">
+                        <i data-lucide="key" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-serif font-semibold text-slate-800">Gemini API Configuration</h3>
+                </div>
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    Contracts.ai uses <strong>Gemini 2.5 Flash</strong> for agentic document reasoning. Your key is stored securely in your browser's local storage and is never transmitted to our servers.
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="api-key-input" class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">API Key</label>
+                        <input type="password" id="api-key-input" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none font-mono" placeholder="AIzaSy...">
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800" onclick="closeApiModal()">Cancel</button>
+                <button class="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-slate-800 shadow-sm" onclick="saveApiKey()">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mind Map Modal -->
+    <div id="modal-mindmap" class="fixed inset-0 bg-white hidden flex-col z-50">
+        <div class="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-slate-50 shrink-0">
+            <h3 class="font-serif font-semibold text-lg text-slate-800 flex items-center gap-2">
+                <i data-lucide="network" class="w-5 h-5 text-accent"></i> Contract Knowledge Graph
+            </h3>
+            <button class="p-2 text-slate-500 hover:bg-slate-200 rounded-full transition-colors" onclick="closeModal('modal-mindmap')">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div id="mynetwork" class="flex-1 bg-white relative">
+             <!-- Loader -->
+             <div id="mindmap-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                <div class="loader border-t-accent w-10 h-10 mb-4"></div>
+                <p class="text-sm font-medium text-slate-600 animate-pulse">Extracting entities and building graph...</p>
+             </div>
+        </div>
+    </div>
+
+    <!-- Initialization Script -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Application State
+        const state = {
+            documents: [], // { id, name, size, pages, file, pdfDoc, extractedText: [{page, text}] }
+            activeDocId: null,
+            chatHistory: [],
+            apiKey: localStorage.getItem('contracts_ai_key') || '',
+            isRTL: false,
+            pdfViewer: {
+                pageNum: 1,
+                scale: 1.0,
+                renderedPages: new Set(),
+                observer: null
+            }
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            docList: document.getElementById('document-list'),
+            emptyState: document.getElementById('empty-state'),
+            currentDocTitle: document.getElementById('current-doc-title'),
+            btnPrev: document.getElementById('btn-prev'),
+            btnNext: document.getElementById('btn-next'),
+            pageNum: document.getElementById('page-num'),
+            pageCount: document.getElementById('page-count'),
+            pdfEmptyState: document.getElementById('pdf-empty-state'),
+            pdfContainer: document.getElementById('pdf-container'),
+            pdfWrapper: document.getElementById('pdf-wrapper'),
+            chatHistory: document.getElementById('chat-history'),
+            chatInput: document.getElementById('chat-input'),
+            sendBtn: document.getElementById('send-btn'),
+            zoomVal: document.getElementById('zoom-val')
+        };
+
+        // --- Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            updateApiStatus();
+            
+            // Textarea auto-resize & enter to send
+            els.chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            els.chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // If no key, show modal
+            if(!state.apiKey) setTimeout(openApiModal, 1000);
+        });
+
+        // --- API Key Management ---
+        function openApiModal() {
+            document.getElementById('api-key-input').value = state.apiKey;
+            document.getElementById('modal-api').classList.remove('hidden');
+            document.getElementById('modal-api').classList.add('flex');
+        }
+
+        function closeApiModal() {
+            document.getElementById('modal-api').classList.add('hidden');
+            document.getElementById('modal-api').classList.remove('flex');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if(key) {
+                state.apiKey = key;
+                localStorage.setItem('contracts_ai_key', key);
+                updateApiStatus();
+                closeApiModal();
+            } else {
+                alert("Please enter a valid API Key.");
+            }
+        }
+
+        function updateApiStatus() {
+            const dot = document.getElementById('status-dot');
+            const txt = document.getElementById('status-text');
+            if (state.apiKey) {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+                txt.textContent = 'Connected';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+                txt.textContent = 'Disconnected';
+            }
+        }
+
+        // --- UI Interactions ---
+        function switchTab(tabId) {
+            const chatTab = document.getElementById('tab-chat');
+            const toolsTab = document.getElementById('tab-tools');
+            const chatView = document.getElementById('view-chat');
+            const toolsView = document.getElementById('view-tools');
+
+            if(tabId === 'chat') {
+                chatTab.classList.replace('border-transparent', 'border-accent');
+                chatTab.classList.replace('text-slate-500', 'text-accent');
+                toolsTab.classList.replace('border-accent', 'border-transparent');
+                toolsTab.classList.replace('text-accent', 'text-slate-500');
+                chatView.classList.remove('hidden');
+                toolsView.classList.add('hidden');
+            } else {
+                toolsTab.classList.replace('border-transparent', 'border-accent');
+                toolsTab.classList.replace('text-slate-500', 'text-accent');
+                chatTab.classList.replace('border-accent', 'border-transparent');
+                chatTab.classList.replace('text-accent', 'text-slate-500');
+                toolsView.classList.remove('hidden');
+                chatView.classList.add('hidden');
+            }
+        }
+
+        function toggleSidebarLeft() {
+            const sidebar = document.querySelector('aside.w-1\\/5');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function toggleLanguage() {
+            state.isRTL = !state.isRTL;
+            const btn = document.getElementById('lang-toggle');
+            if(state.isRTL) {
+                document.documentElement.setAttribute('dir', 'rtl');
+                btn.textContent = 'English';
+                document.getElementById('ui-doc-library').innerHTML = '<i data-lucide="library" class="w-4 h-4 text-slate-500 ml-2"></i> مكتبة المستندات';
+                document.getElementById('ui-upload-text').textContent = 'تحميل العقود';
+                document.getElementById('ui-greeting').textContent = 'مرحباً، أنا Contracts.ai.';
+                document.getElementById('ui-welcome-msg').textContent = 'قم بتحميل اتفاقيات إدارة أصول البرامج (SAM)، أو عقود SaaS، أو مستندات الموردين. يمكنني تحليلها، وتحديد المخاطر، واستخراج البيانات الوصفية، والإجابة على أي أسئلة.';
+                els.chatInput.placeholder = 'اسأل عن الشروط، التجديدات، الامتثال...';
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+                btn.textContent = 'العربية';
+                document.getElementById('ui-doc-library').innerHTML = '<i data-lucide="library" class="w-4 h-4 text-slate-500 mr-2"></i> Document Library';
+                document.getElementById('ui-upload-text').textContent = 'Upload Contracts';
+                document.getElementById('ui-greeting').textContent = 'Hello, I am Contracts.ai.';
+                document.getElementById('ui-welcome-msg').textContent = 'Upload your Software Asset Management agreements, SaaS contracts, or vendor documents. I can analyze them, identify risks, extract metadata, and answer any questions.';
+                els.chatInput.placeholder = 'Ask about terms, renewals, compliance...';
+            }
+            lucide.createIcons();
+            
+            // Re-render PDF if active to fix alignment issues that might arise
+            if(state.activeDocId) {
+                 const doc = state.documents.find(d => d.id === state.activeDocId);
+                 if (doc) initContinuousViewer(doc);
+            }
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        // --- Document Upload & Processing ---
+        
+        // Handle Drag & Drop
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50', 'border-accent'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('bg-blue-50', 'border-accent'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-50', 'border-accent');
+            if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+        });
+
+        async function handleFiles(files) {
+            if(!files || files.length === 0) return;
+            
+            const progress = document.getElementById('upload-progress');
+            const status = document.getElementById('upload-status');
+            progress.classList.remove('hidden');
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type !== 'application/pdf') continue;
+
+                status.textContent = `Processing ${file.name}...`;
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    const docId = 'doc_' + Date.now() + '_' + i;
+                    const newDoc = {
+                        id: docId,
+                        file: file,
+                        name: file.name,
+                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                        pages: pdfDoc.numPages,
+                        pdfDoc: pdfDoc,
+                        extractedText: [] // Will populate async
+                    };
+                    
+                    state.documents.push(newDoc);
+                    renderDocumentList();
+                    
+                    // Extract text in background
+                    extractTextAsync(newDoc);
+
+                    // If first doc, open it automatically
+                    if(state.documents.length === 1) {
+                        openDocument(docId);
+                    }
+
+                } catch (error) {
+                    console.error("Error loading PDF:", error);
+                    alert(`Failed to load ${file.name}`);
+                }
+            }
+            progress.classList.add('hidden');
+        }
+
+        async function extractTextAsync(doc) {
+            // Background extraction to prevent UI freeze
+            for (let i = 1; i <= doc.pages; i++) {
+                try {
+                    const page = await doc.pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const text = textContent.items.map(item => item.str).join(' ');
+                    doc.extractedText.push({ page: i, text: text });
+                } catch (e) {
+                    console.error(`Error extracting text page ${i} of ${doc.name}`, e);
+                }
+                // Yield to main thread
+                await new Promise(r => setTimeout(r, 10)); 
+            }
+            console.log(`Extracted text for ${doc.name}`);
+        }
+
+        function renderDocumentList() {
+            els.emptyState.classList.add('hidden');
+            els.docList.innerHTML = '';
+            
+            state.documents.forEach(doc => {
+                const isActive = doc.id === state.activeDocId;
+                const div = document.createElement('div');
+                div.className = `p-3 mb-2 rounded-lg border cursor-pointer transition-colors group relative ${isActive ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'}`;
+                div.onclick = () => openDocument(doc.id);
+                
+                div.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="mt-1">
+                            <i data-lucide="file-text" class="w-5 h-5 ${isActive ? 'text-accent' : 'text-slate-400'}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-800 truncate">${doc.name}</p>
+                            <div class="flex items-center gap-2 mt-1 text-[10px] text-slate-500 uppercase tracking-wider">
+                                <span>${doc.pages} pgs</span>
+                                <span>•</span>
+                                <span>${doc.size}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="absolute top-2 ${state.isRTL ? 'left-2' : 'right-2'} p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all" onclick="event.stopPropagation(); deleteDocument('${doc.id}')" title="Delete">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                els.docList.appendChild(div);
+            });
+            lucide.createIcons();
+            
+            if(state.documents.length === 0) {
+                els.emptyState.classList.remove('hidden');
+                els.pdfEmptyState.classList.remove('hidden');
+                els.pdfWrapper.classList.add('hidden');
+                els.currentDocTitle.textContent = "No document selected";
+            }
+        }
+
+        function deleteDocument(id) {
+            state.documents = state.documents.filter(d => d.id !== id);
+            if(state.activeDocId === id) {
+                state.activeDocId = null;
+                els.pdfWrapper.classList.add('hidden');
+                els.pdfEmptyState.classList.remove('hidden');
+                els.currentDocTitle.textContent = "No document selected";
+            }
+            renderDocumentList();
+        }
+
+        // --- PDF Viewer ---
+
+        async function openDocument(id) {
+            const doc = state.documents.find(d => d.id === id);
+            if(!doc) return;
+
+            state.activeDocId = id;
+            renderDocumentList(); // Update active state in list
+            
+            els.currentDocTitle.textContent = doc.name;
+            els.pdfEmptyState.classList.add('hidden');
+            els.pdfWrapper.classList.remove('hidden');
+            
+            state.pdfViewer.pageNum = 1;
+            els.pageCount.textContent = doc.pages;
+            
+            initContinuousViewer(doc);
+        }
+
+        function initContinuousViewer(doc) {
+            els.pdfWrapper.innerHTML = '';
+            state.pdfViewer.renderedPages.clear();
+            
+            if (state.pdfViewer.observer) {
+                state.pdfViewer.observer.disconnect();
+            }
+
+            state.pdfViewer.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const pageNum = parseInt(entry.target.dataset.pageNumber);
+                        
+                        // Update current page in toolbar if predominantly visible
+                        if (entry.intersectionRatio > 0.1) {
+                            els.pageNum.textContent = pageNum;
+                            state.pdfViewer.pageNum = pageNum;
+                            els.btnPrev.disabled = pageNum <= 1;
+                            els.btnNext.disabled = pageNum >= doc.pages;
+                        }
+                        
+                        // Render if not yet rendered
+                        if (!state.pdfViewer.renderedPages.has(pageNum)) {
+                            renderContinuousPage(doc, pageNum, entry.target);
+                        }
+                    }
+                });
+            }, {
+                root: els.pdfContainer,
+                rootMargin: '100% 0px', // Load 1 viewport above/below
+                threshold: [0, 0.1, 0.5]
+            });
+
+            for (let i = 1; i <= doc.pages; i++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'pdf-page bg-white shadow-md mb-4 relative min-h-[800px] flex items-center justify-center';
+                pageDiv.dataset.pageNumber = i;
+                pageDiv.id = `page-${i}`;
+                pageDiv.style.width = '100%';
+                pageDiv.style.maxWidth = '800px'; 
+                
+                // Loader placeholder
+                pageDiv.innerHTML = `<div class="loader border-t-accent w-8 h-8 absolute"></div>`;
+                
+                els.pdfWrapper.appendChild(pageDiv);
+                state.pdfViewer.observer.observe(pageDiv);
+            }
+        }
+
+        function renderContinuousPage(doc, pageNum, container) {
+            state.pdfViewer.renderedPages.add(pageNum);
+            
+            doc.pdfDoc.getPage(pageNum).then(function(page) {
+                const canvas = document.createElement('canvas');
+                canvas.className = 'max-w-full h-auto block';
+                canvas.style.direction = 'ltr'; // Ensure LTR for PDF
+                
+                const containerWidth = els.pdfContainer.clientWidth - 40; // minus padding
+                let unscaledViewport = page.getViewport({scale: 1.0});
+                let baseScale = containerWidth / unscaledViewport.width;
+                if(baseScale > 2.0) baseScale = 2.0;
+
+                const viewport = page.getViewport({scale: baseScale * state.pdfViewer.scale});
+                const outputScale = window.devicePixelRatio || 1;
+                
+                canvas.width = Math.floor(viewport.width * outputScale);
+                canvas.height = Math.floor(viewport.height * outputScale);
+                canvas.style.width = Math.floor(viewport.width) + "px";
+                canvas.style.height = Math.floor(viewport.height) + "px";
+
+                container.style.minHeight = canvas.style.height;
+                container.style.maxWidth = 'none'; // Release max-width constraint for zoom
+                container.style.width = canvas.style.width;
+
+                const transform = outputScale !== 1 
+                  ? [outputScale, 0, 0, outputScale, 0, 0] 
+                  : null;
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d', { alpha: false }),
+                    transform: transform,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext).promise.then(() => {
+                    container.innerHTML = ''; // Remove loader
+                    container.appendChild(canvas);
+                }).catch(err => {
+                    console.error("Page render error:", err);
+                    state.pdfViewer.renderedPages.delete(pageNum); // Allow retry
+                });
+            });
+        }
+
+        function changePage(offset) {
+            const doc = state.documents.find(d => d.id === state.activeDocId);
+            if (!doc) return;
+            
+            let newPage = state.pdfViewer.pageNum + offset;
+            if (newPage < 1) newPage = 1;
+            if (newPage > doc.pages) newPage = doc.pages;
+            
+            const pageDiv = document.getElementById(`page-${newPage}`);
+            if(pageDiv) {
+                pageDiv.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function zoom(delta) {
+            state.pdfViewer.scale += delta;
+            if(state.pdfViewer.scale < 0.5) state.pdfViewer.scale = 0.5;
+            if(state.pdfViewer.scale > 3.0) state.pdfViewer.scale = 3.0;
+            
+            els.zoomVal.textContent = Math.round(state.pdfViewer.scale * 100) + '%';
+            
+            if(state.activeDocId) {
+                const doc = state.documents.find(d => d.id === state.activeDocId);
+                const currentPage = state.pdfViewer.pageNum;
+                initContinuousViewer(doc);
+                
+                // Jump back to the current page after slight delay to allow rendering setup
+                setTimeout(() => {
+                    const pageDiv = document.getElementById(`page-${currentPage}`);
+                    if(pageDiv) pageDiv.scrollIntoView();
+                }, 50);
+            }
+        }
+        
+        function jumpToPage(docName, pageNum) {
+             const doc = state.documents.find(d => docName.includes(d.name) || d.name.includes(docName));
+             if(doc) {
+                 if (state.activeDocId !== doc.id) {
+                     openDocument(doc.id);
+                 }
+                 let targetPage = parseInt(pageNum);
+                 if(targetPage >= 1 && targetPage <= doc.pages) {
+                     setTimeout(() => {
+                         const pageDiv = document.getElementById(`page-${targetPage}`);
+                         if(pageDiv) pageDiv.scrollIntoView({ behavior: 'smooth' });
+                     }, 150);
+                 }
+             }
+        }
+
+        // --- AI & Agentic RAG System ---
+
+        async function triggerQuickAction(prompt) {
+            switchTab('chat');
+            els.chatInput.value = prompt;
+            sendMessage();
+        }
+
+        function buildSystemPrompt() {
+            return `You are Contracts.ai, an expert Enterprise Contract Intelligence Platform designed for Software Asset Management (SAM), Procurement, and Legal Operations.
+
+CORE DIRECTIVE:
+1. Provide highly professional, concise, and accurate answers.
+2. AGENTIC REASONING: Determine if the user's query requires specific context from uploaded documents OR if it is a general knowledge question (e.g., "What is SaaS?").
+3. If document context is provided below, USE IT strictly to answer document-related questions.
+4. CITATIONS REQUIRED: When answering based on uploaded documents, you MUST cite the source immediately after the claim using the format: [Document Name, Page X].
+   Example: "The automatic renewal period is 60 days [Microsoft_EA_2025.pdf, Page 12]."
+5. If the user asks about documents but none are uploaded or relevant, state clearly that you need them to upload the specific documents.
+6. Formatting: Use Markdown (bolding, tables, lists) to make responses structured and readable.
+
+Current Context from Uploaded Documents (Results from local search):
+`;
+        }
+
+        // Lightweight TF-IDF-ish local search implementation
+        function retrieveRelevantContext(query) {
+            if(state.documents.length === 0) return "No documents uploaded.";
+
+            const queryWords = query.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+            if(queryWords.length === 0) return "General query, no specific keywords.";
+
+            let scoredPages = [];
+
+            state.documents.forEach(doc => {
+                doc.extractedText.forEach(page => {
+                    const text = page.text.toLowerCase();
+                    let score = 0;
+                    queryWords.forEach(word => {
+                        // Simple frequency count
+                        const regex = new RegExp(word, 'g');
+                        const matches = text.match(regex);
+                        if(matches) score += matches.length;
+                    });
+                    
+                    if(score > 0) {
+                        scoredPages.push({
+                            docName: doc.name,
+                            pageNum: page.page,
+                            text: page.text.substring(0, 3000), // Limit chunk size
+                            score: score
+                        });
+                    }
+                });
+            });
+
+            // Sort by score desc, take top 10 most relevant pages across all docs to fit in context window
+            scoredPages.sort((a, b) => b.score - a.score);
+            const topPages = scoredPages.slice(0, 10);
+
+            if(topPages.length === 0) return "No explicitly matching content found in documents based on keywords.";
+
+            let contextStr = "";
+            topPages.forEach(p => {
+                contextStr += `\n--- SOURCE: ${p.docName} | PAGE: ${p.pageNum} ---\n${p.text}\n`;
+            });
+            return contextStr;
+        }
+
+        function appendMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `flex gap-3 ${role === 'user' ? 'flex-row-reverse' : ''}`;
+            
+            let avatar = '';
+            if(role === 'user') {
+                avatar = `<div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 text-white"><i data-lucide="user" class="w-4 h-4"></i></div>`;
+            } else {
+                avatar = `<div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0"><i data-lucide="bot" class="w-4 h-4 text-accent"></i></div>`;
+            }
+
+            // Sanitize and parse markdown
+            let htmlContent = DOMPurify.sanitize(marked.parse(text));
+            
+            // Post-process HTML to convert citations to clickable badges
+            // Regex matches [DocName.pdf, Page X] or similar
+            const citationRegex = /\[(.*?)[\.,;]\s*Page\s*(\d+)\]/gi;
+            htmlContent = htmlContent.replace(citationRegex, (match, docName, pageNum) => {
+                return `<span class="citation" onclick="jumpToPage('${docName.trim()}', ${pageNum})"><i data-lucide="link" class="w-3 h-3 inline mr-1"></i>${docName.trim()}, p.${pageNum}</span>`;
+            });
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="${role === 'user' ? 'bg-primary text-white' : 'bg-white border border-slate-200 text-slate-800'} rounded-2xl ${role === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'} p-4 text-sm shadow-sm max-w-[85%] prose prose-sm overflow-hidden break-words">
+                    ${htmlContent}
+                </div>
+            `;
+            
+            els.chatHistory.appendChild(div);
+            lucide.createIcons();
+            els.chatHistory.scrollTop = els.chatHistory.scrollHeight;
+            
+            state.chatHistory.push({ role, text });
+        }
+
+        async function sendMessage() {
+            const text = els.chatInput.value.trim();
+            if(!text) return;
+            if(!state.apiKey) {
+                openApiModal();
+                return;
+            }
+
+            // Disable input
+            els.chatInput.value = '';
+            els.chatInput.style.height = 'auto';
+            els.sendBtn.disabled = true;
+            els.chatInput.disabled = true;
+
+            appendMessage('user', text);
+
+            // Add loading indicator
+            const loadId = 'load_' + Date.now();
+            const loadDiv = document.createElement('div');
+            loadDiv.id = loadId;
+            loadDiv.className = `flex gap-3`;
+            loadDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0"><i data-lucide="bot" class="w-4 h-4 text-accent"></i></div>
+                <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 text-sm shadow-sm flex items-center gap-2 text-slate-500">
+                    <div class="loader w-4 h-4 border-t-accent"></div> Analyzing contracts...
+                </div>
+            `;
+            els.chatHistory.appendChild(loadDiv);
+            els.chatHistory.scrollTop = els.chatHistory.scrollHeight;
+
+            try {
+                // Agentic RAG: Retrieve context based on query
+                const context = retrieveRelevantContext(text);
+                
+                // Build payload for Gemini 2.5 Flash
+                const systemInstruction = buildSystemPrompt() + "\n" + context;
+                
+                // Format history for Gemini API
+                const contents = [];
+                state.chatHistory.forEach(msg => {
+                    contents.push({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.text }]
+                    });
+                });
+                // Ensure the last item is the user's current message (already pushed to state)
+                
+                const payload = {
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    contents: contents,
+                    generationConfig: {
+                        temperature: 0.1, // Keep it factual for contracts
+                    }
+                };
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if(!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "API Request Failed");
+                }
+
+                const data = await response.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+
+                // Remove loader and show response
+                document.getElementById(loadId).remove();
+                appendMessage('assistant', aiText);
+
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                document.getElementById(loadId).remove();
+                appendMessage('assistant', `**Error:** Failed to connect to AI. Please check your API key.\n\nDetails: ${error.message}`);
+            } finally {
+                els.sendBtn.disabled = false;
+                els.chatInput.disabled = false;
+                els.chatInput.focus();
+            }
+        }
+
+
+        // --- Generation Tools ---
+
+        async function askGeminiInternal(prompt, contextText, jsonMode = false) {
+             if(!state.apiKey) { alert("API Key required."); return null; }
+             
+             const systemInstruction = "You are a data extraction engine for contracts. Output only exactly what is requested.";
+             const payload = {
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                contents: [{ role: 'user', parts: [{ text: `Context:\n${contextText}\n\nTask:\n${prompt}` }] }],
+                generationConfig: { temperature: 0.1 }
+             };
+             
+             if(jsonMode) {
+                 payload.generationConfig.responseMimeType = "application/json";
+             }
+
+             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+             });
+
+             if(!response.ok) throw new Error("Generation failed");
+             const data = await response.json();
+             return data.candidates[0].content.parts[0].text;
+        }
+
+        async function generateMindMap() {
+            if(state.documents.length === 0) { alert("Upload documents first."); return; }
+            
+            document.getElementById('modal-mindmap').classList.remove('hidden');
+            document.getElementById('modal-mindmap').classList.add('flex');
+            document.getElementById('mindmap-loader').classList.remove('hidden');
+
+            try {
+                // Get sample text from first document
+                const sampleDoc = state.documents[0];
+                const textSample = sampleDoc.extractedText.slice(0, 10).map(p=>p.text).join(' ').substring(0, 15000); // 15k chars
+
+                const prompt = `
+                Extract a knowledge graph from this contract text.
+                Return a JSON object with exactly two arrays: "nodes" and "edges".
+                Nodes should have "id" (number), "label" (short text), and "group" (string: 'Document', 'Vendor', 'Product', 'Risk', 'Term').
+                Edges should have "from" (node id), "to" (node id), and "label" (relationship).
+                Keep it under 30 nodes for clarity. Central node should be the Document name.
+                `;
+
+                const jsonStr = await askGeminiInternal(prompt, textSample, true);
+                const graphData = JSON.parse(jsonStr);
+
+                // Setup Vis.js
+                const container = document.getElementById('mynetwork');
+                const options = {
+                    nodes: { shape: 'box', margin: 10, font: { face: 'Inter' } },
+                    edges: { arrows: 'to', font: { size: 10, align: 'middle' } },
+                    groups: {
+                        'Document': { color: { background: '#1e293b', border: '#0f172a' }, font: { color: 'white' } },
+                        'Vendor': { color: { background: '#2563eb', border: '#1d4ed8' }, font: { color: 'white' } },
+                        'Product': { color: { background: '#10b981', border: '#047857' }, font: { color: 'white' } },
+                        'Risk': { color: { background: '#ef4444', border: '#b91c1c' }, font: { color: 'white' } },
+                        'Term': { color: { background: '#f8fafc', border: '#cbd5e1' } }
+                    },
+                    physics: { barnesHut: { gravitationalConstant: -2000, centralGravity: 0.3, springLength: 150 } }
+                };
+
+                document.getElementById('mindmap-loader').classList.add('hidden');
+                new vis.Network(container, graphData, options);
+
+            } catch(e) {
+                console.error(e);
+                alert("Failed to generate Knowledge Graph. Ensure your API key is valid.");
+                closeModal('modal-mindmap');
+            }
+        }
+
+        async function generatePresentation() {
+             if(state.documents.length === 0) { alert("Upload documents first."); return; }
+             if(!state.activeDocId) { alert("Select a document to generate presentation for."); return; }
+             
+             const btn = document.querySelector('button[onclick="generatePresentation()"]');
+             const originalHtml = btn.innerHTML;
+             btn.innerHTML = '<div class="loader w-4 h-4 border-t-amber-500 mb-1"></div><span class="text-xs">Generating...</span>';
+             
+             try {
+                 const doc = state.documents.find(d => d.id === state.activeDocId);
+                 const textSample = doc.extractedText.slice(0, 15).map(p=>p.text).join(' ').substring(0, 20000);
+                 
+                 const prompt = `
+                 Extract key presentation points for an executive summary of this contract.
+                 Return a JSON array of objects representing slides.
+                 Each object must have: "title" (string), "bullets" (array of strings).
+                 Include 4-5 slides: Overview, Key Terms, Pricing/Licensing, Risks, Recommendations.
+                 `;
+                 
+                 const jsonStr = await askGeminiInternal(prompt, textSample, true);
+                 const slidesData = JSON.parse(jsonStr);
+
+                 // Generate PPT using PptxGenJS
+                 let pptx = new PptxGenJS();
+                 pptx.layout = 'LAYOUT_16x9';
+                 
+                 // Title Slide
+                 let slide = pptx.addSlide();
+                 slide.background = { color: "0f172a" };
+                 slide.addText("Contract Executive Summary", { x: 1, y: 2, w: 8, h: 1, fontSize: 36, color: "ffffff", bold: true });
+                 slide.addText(doc.name, { x: 1, y: 3, w: 8, h: 1, fontSize: 18, color: "94a3b8" });
+                 slide.addText("Generated by Contracts.ai", { x: 1, y: 6.5, w: 8, h: 0.5, fontSize: 12, color: "64748b" });
+
+                 // Content Slides
+                 slidesData.forEach(sData => {
+                     let s = pptx.addSlide();
+                     s.background = { color: "ffffff" };
+                     // Header banner
+                     s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:'100%', h:0.8, fill:{ color:"f8fafc" }});
+                     s.addText(sData.title, { x: 0.5, y: 0.1, w: 9, h: 0.6, fontSize: 24, color: "0f172a", bold: true });
+                     
+                     // Bullets
+                     let bulletText = sData.bullets.map(b => ({ text: b, options: { bullet: true } }));
+                     s.addText(bulletText, { x: 0.5, y: 1.2, w: 9, h: 4, fontSize: 16, color: "334155", lineSpacing: 32 });
+                 });
+
+                 pptx.writeFile({ fileName: `Summary_${doc.name.replace('.pdf','')}.pptx` });
+
+             } catch(e) {
+                 console.error(e);
+                 alert("Failed to generate presentation.");
+             } finally {
+                 btn.innerHTML = originalHtml;
+                 lucide.createIcons();
+             }
+        }
+
+        async function exportToExcel() {
+            if(state.documents.length === 0) { alert("Upload documents first."); return; }
+            
+            const btn = document.querySelector('button[onclick="exportToExcel()"]');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<div class="loader w-4 h-4 border-t-emerald-500 mb-1"></div><span class="text-xs">Extracting...</span>';
+
+            try {
+                // Get text from all docs
+                let allText = state.documents.map(d => `Document: ${d.name}\n` + d.extractedText.slice(0,5).map(p=>p.text).join(' ').substring(0, 5000)).join('\n\n');
+                
+                const prompt = `
+                Extract a structured License Inventory from the following contracts.
+                Return a JSON array of objects.
+                Keys should be exactly: "Document", "Vendor", "Product/Service", "License Type", "Quantity", "Unit Price", "Total Cost", "Renewal Date".
+                If a value is not found, use "N/A".
+                `;
+
+                const jsonStr = await askGeminiInternal(prompt, allText, true);
+                const data = JSON.parse(jsonStr);
+
+                // Create Excel
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "License Inventory");
+                
+                // Style header row (basic support in sheetjs free version)
+                XLSX.writeFile(workbook, "Contracts_License_Inventory.xlsx");
+
+            } catch(e) {
+                 console.error(e);
+                 alert("Failed to export Excel data.");
+            } finally {
+                 btn.innerHTML = originalHtml;
+                 lucide.createIcons();
+            }
+        }
+
+    </script>
+</body>
+</html>
